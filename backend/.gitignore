@@ -1,1 +1,5 @@
-
+node_modules
+build
+/log/*
+!/log/.gitkeep
+.env
