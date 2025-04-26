@@ -1,20 +1,15 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Login from './components/Login';
-import Register from './components/Register';
-import AuctionList from './components/AuctionList';
-import AuctionDetail from './components/AuctionDetail';
+import { Switch, Route } from 'react-router-dom';
+import Home from './components/Home'; // Adjust path as needed
+import AuctionApp from './components/AuctionApp'; // Adjust path
 
 function App() {
   return (
-    <Router>
+    <div>
       <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route exact path="/" component={AuctionList} />
-        <Route path="/auction/:id" component={AuctionDetail} />
+        <Route exact path="/" component={Home} />
+        <Route path="/app" component={AuctionApp} />
       </Switch>
-    </Router>
+    </div>
   );
 }
 
