@@ -32,3 +32,4 @@ model Bid {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+generator client { provider = "prisma-client-js"} 
