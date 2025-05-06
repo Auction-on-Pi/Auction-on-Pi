@@ -5,22 +5,13 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import logger from 'morgan';
-import MongoStore from 'connect-mongo';
-import { MongoClient } from 'mongodb';
+import pgSimple from 'connect-pg-simple';
+import { Pool } from 'pg';
 import env from './environments';
+import prisma from './lib/prisma';
 import mountPaymentsEndpoints from './handlers/payments';
 import mountUserEndpoints from './handlers/users';
 import "./types/session";
-
-const dbName = env.mongo_db_name;
-const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
-const mongoClientOptions = {
-  authSource: "admin",
-  auth: {
-    username: env.mongo_user,
-    password: env.mongo_password,
-  },
-};
 
 const app: express.Application = express();
 
@@ -34,30 +25,27 @@ app.use(cors({
   credentials: true
 }));
 app.use(cookieParser());
+
+// Set up PostgreSQL session store
+const PGStore = pgSimple(session);
+const pgPool = new Pool({
+  connectionString: env.database_url,
+});
 app.use(session({
   secret: env.session_secret,
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: mongoUri,
-    mongoOptions: mongoClientOptions,
-    dbName: dbName,
-    collectionName: 'user_sessions'
+  store: new PGStore({
+    pool: pgPool,
+    tableName: 'user_sessions',
+    createTableIfMissing: true
   }),
 }));
 
-// Connect to MongoDB for each request
-app.use(async (req, res, next) => {
-  try {
-    const client = await MongoClient.connect(mongoUri, mongoClientOptions);
-    const db = client.db(dbName);
-    app.locals.orderCollection = db.collection('orders');
-    app.locals.userCollection = db.collection('users');
-    next();
-  } catch (err) {
-    console.error('Connection to MongoDB failed: ', err);
-    res.status(500).send({ error: 'Database connection failed' });
-  }
+// Make Prisma client available
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
 });
 
 const paymentsRouter = express.Router();
