@@ -1,8 +1,3 @@
-import { Router, Request, Response } from 'express';
-import '../types/session';
-
-const router = Router();
-
 router.post('/signin', async (req: Request, res: Response) => {
   try {
     const prisma = req.prisma;
@@ -26,7 +21,3 @@ router.post('/signin', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Signin failed' });
   }
 });
-
-export default function mountUserEndpoints(router: Router) {
-  return router;
-}
