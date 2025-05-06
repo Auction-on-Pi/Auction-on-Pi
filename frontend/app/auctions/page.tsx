@@ -41,4 +41,4 @@ export default async function AuctionsPage() {
       )}
     </div>
   );
-}
+    }
