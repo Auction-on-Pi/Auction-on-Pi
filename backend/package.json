@@ -9,6 +9,9 @@
     "next": "^14.2.28"
   },
   "devDependencies": {
-    "prisma": "6.7.0"
+    "prisma": "6.7.0",
+    "typescript": "^5.6.3",
+    "@types/react": "^18.3.11",
+    "@types/node": "^22.7.5"
   }
 }
