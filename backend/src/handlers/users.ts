@@ -1,23 +1,57 @@
+import { Router, Request, Response } from 'express';
+import axios from 'axios';
+import env from '../environments';
+import '../types/session';
+
+const router = Router();
+
 router.post('/signin', async (req: Request, res: Response) => {
   try {
+    const { piUserId, username } = req.body;
+    if (!piUserId || !username) {
+      return res.status(400).json({ error: 'Missing piUserId or username' });
+    }
+
     const prisma = req.prisma;
-    const user = await prisma.user.findUnique({
-      where: { piUserId: req.body.piUserId },
+    let user = await prisma.user.findUnique({
+      where: { piUserId },
     });
+
     if (!user) {
-      const newUser = await prisma.user.create({
+      user = await prisma.user.create({
         data: {
-          piUserId: req.body.piUserId,
-          username: req.body.username || 'Anonymous',
+          piUserId,
+          username
         },
       });
-      req.session.user = newUser;
-      return res.status(200).json(newUser);
+
+      const supabaseAdmin = axios.create({
+        baseURL: env.supabase_url,
+        headers: {
+          'Authorization': `Bearer ${env.supabase_service_role_key}`,
+          'Content-Type': 'application/json',
+          'apikey': env.supabase_service_role_key
+        }
+      });
+
+      await supabaseAdmin.post('/auth/v1/users', {
+        id: piUserId,
+        email: `${username.replace(/\s+/g, '').toLowerCase()}@auction-on-pi.com`,
+        role: 'authenticated'
+      });
     }
+
     req.session.user = user;
     res.status(200).json(user);
-  } catch (error) {
-    console.error('Signin error:', error);
-    res.status(500).json({ error: 'Signin failed' });
+  } catch (error: any) {
+    console.error('Signin error:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: 'Signin failed', details: error.message });
   }
 });
+
+export default function mountUserEndpoints(router: Router) {
+  return router;
+}
