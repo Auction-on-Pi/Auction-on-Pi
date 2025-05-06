@@ -11,7 +11,6 @@ import mountPaymentsEndpoints from './handlers/payments';
 import mountUserEndpoints from './handlers/users';
 import './types/session';
 
-// Augment Express Request type
 declare module 'express' {
   interface Request {
     prisma: typeof prisma;
@@ -28,7 +27,6 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// Set up PostgreSQL session store
 const PGStore = pgSimple(session);
 const pgPool = new Pool({
   connectionString: env.database_url,
@@ -45,19 +43,16 @@ app.use(session({
   }),
 }));
 
-// Make Prisma client available
 app.use((req, res, next) => {
   req.prisma = prisma;
   next();
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// Mount endpoints
 const paymentsRouter = express.Router();
 mountPaymentsEndpoints(paymentsRouter);
 app.use('/payments', paymentsRouter);
