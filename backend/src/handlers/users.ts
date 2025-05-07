@@ -52,6 +52,4 @@ router.post('/signin', async (req: Request, res: Response) => {
   }
 });
 
-export default function mountUserEndpoints(router: Router) {
-  return router;
-}
+export default router;
