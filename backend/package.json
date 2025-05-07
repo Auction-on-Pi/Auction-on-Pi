@@ -19,7 +19,8 @@
     "@types/express-session": "^1.18.0",
     "@types/morgan": "^1.9.9",
     "@types/pg": "^8.11.6",
-    "@types/node": "^20.14.2"
+    "@types/node": "^20.14.2",
+    "@types/connect-pg-simple": "^7.0.4"
   },
   "scripts": {
     "postinstall": "npx prisma generate"
