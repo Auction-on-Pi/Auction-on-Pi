@@ -1,11 +1,7 @@
-import { SessionData } from 'express-session';
+import { Session, SessionData } from 'express-session';
 
-declare module 'express-session' {
-  interface SessionData {
-    user?: {
-      id: number;
-      piUserId: string;
-      username: string;
-    };
+declare module 'express' {
+  interface Request {
+    session: Session & Partial<SessionData> & { user?: { id: number; piUserId: string; username: string } };
   }
 }
