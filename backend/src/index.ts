@@ -7,8 +7,8 @@ import pgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 import env from './environments';
 import { PrismaClient } from '@prisma/client';
-import mountPaymentsEndpoints from './handlers/payments';
-import mountUserEndpoints from './handlers/users';
+import paymentsRouter from './handlers/payments';
+import userRouter from './handlers/users';
 import './types/session';
 
 // Fallback for Prisma
@@ -56,12 +56,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-const paymentsRouter = express.Router();
-mountPaymentsEndpoints(paymentsRouter);
 app.use('/payments', paymentsRouter);
-
-const userRouter = express.Router();
-mountUserEndpoints(userRouter);
 app.use('/user', userRouter);
 
 app.get('/', async (_: express.Request, res: express.Response) => {
