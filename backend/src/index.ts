@@ -6,15 +6,18 @@ import logger from 'morgan';
 import pgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 import env from './environments';
-import prisma from './lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import mountPaymentsEndpoints from './handlers/payments';
 import mountUserEndpoints from './handlers/users';
 import './types/session';
 
-declare module 'express' {
-  interface Request {
-    prisma: typeof prisma;
-  }
+// Fallback for Prisma
+let prisma: PrismaClient;
+try {
+  prisma = require('./lib/prisma').default;
+} catch (e) {
+  console.warn('Falling back to new PrismaClient instance');
+  prisma = new PrismaClient();
 }
 
 const app: express.Application = express();
@@ -43,12 +46,12 @@ app.use(session({
   }),
 }));
 
-app.use((req, res, next) => {
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.prisma = prisma;
   next();
 });
 
-app.use((err, req, res, next) => {
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server Error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
@@ -61,7 +64,7 @@ const userRouter = express.Router();
 mountUserEndpoints(userRouter);
 app.use('/user', userRouter);
 
-app.get('/', async (_, res) => {
+app.get('/', async (_: express.Request, res: express.Response) => {
   res.status(200).send({ message: "Hello, World!" });
 });
 
