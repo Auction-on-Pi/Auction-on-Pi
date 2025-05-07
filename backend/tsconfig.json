@@ -12,7 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "*": ["src/*", "lib/*"]
-    }
+    },
+    "types": ["node"]
   },
   "include": ["src/**/*", "lib/**/*"],
   "exclude": ["node_modules", "dist"]
