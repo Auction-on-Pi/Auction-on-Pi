@@ -1,19 +1,31 @@
 // src/types/users.ts
-export interface UserSessionData {
-  id: string;         // Using string instead of ObjectId for compatibility
+export interface AuthUserData {
+  id: number;         // Matches Prisma's Int ID
+  piUserId: string;
   username: string;
-  uid: string;
-  roles: string[];
   accessToken: string;
+  roles?: string[];   // Optional to match your session type
 }
 
-// For Prisma model types (if you need them)
-export type UserPrismaData = {
-  id: string;
+// For Prisma model types
+export type UserWithRelations = {
+  id: number;
+  piUserId: string;
   username: string;
-  uid: string;
-  roles: string[];
-  accessToken: string;
-  createdAt: Date;
-  updatedAt: Date;
+  auctions: Auction[];
+  bids: Bid[];
+};
+
+// Additional types for related models
+type Auction = {
+  id: number;
+  title: string;
+  description: string;
+  // ... other auction fields
+};
+
+type Bid = {
+  id: number;
+  amount: number;
+  // ... other bid fields
 };
