@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { Request, Response, NextFunction, Application } from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import logger from 'morgan';
@@ -11,6 +11,15 @@ import paymentsRouter from './handlers/payments';
 import userRouter from './handlers/users';
 import './types/session';
 
+// Extend Express Request type to include prisma
+declare global {
+  namespace Express {
+    interface Request {
+      prisma: PrismaClient;
+    }
+  }
+}
+
 // Fallback for Prisma
 let prisma: PrismaClient;
 try {
@@ -20,7 +29,7 @@ try {
   prisma = new PrismaClient();
 }
 
-const app: express.Application = express();
+const app: Application = express();
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -44,23 +53,35 @@ app.use(session({
     tableName: 'user_sessions',
     createTableIfMissing: true
   }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
 }));
 
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+// Middleware to attach prisma to request
+app.use((req: Request, _res: Response, next: NextFunction) => {
   req.prisma = prisma;
   next();
 });
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Server Error:', err);
-  res.status(500).json({ error: 'Internal Server Error' });
+// Error handler middleware
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof Error) {
+    console.error('Server Error:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+  next();
 });
 
+// Routes
 app.use('/payments', paymentsRouter);
 app.use('/user', userRouter);
 
-app.get('/', async (_: express.Request, res: express.Response) => {
-  res.status(200).send({ message: "Hello, World!" });
+app.get('/', async (_req: Request, res: Response) => {
+  res.status(200).json({ message: "Hello, World!" });
 });
 
 export default app;
