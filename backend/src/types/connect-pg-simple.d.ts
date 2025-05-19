@@ -1,14 +1,14 @@
 declare module 'connect-pg-simple' {
   import { Store } from 'express-session';
-  import { Pool, PoolConfig } from 'pg';
+  import { Pool } from 'pg';
 
-  function pgSimple(session: any): new (options?: {
+  interface PGStoreOptions {
     pool?: Pool;
     tableName?: string;
     createTableIfMissing?: boolean;
-    ttl?: number;
-    pruneSessionInterval?: number;
-  }) => Store;
+  }
 
+  function pgSimple(session: any): new (options?: PGStoreOptions) => Store;
+  
   export = pgSimple;
 }
