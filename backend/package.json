@@ -1,27 +1,27 @@
 {
   "dependencies": {
-    "@prisma/client": "^6.7.0",
-    "axios": "^1.7.7",
-    "connect-pg-simple": "^10.0.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^4.21.1",
-    "express-session": "^1.18.0",
-    "morgan": "^1.10.0",
-    "pg": "^8.13.0",
-    "prisma": "^6.7.0"
+    "@prisma/client": "6.7.0",
+    "axios": "1.7.7",
+    "connect-pg-simple": "10.0.0",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.5",
+    "dotenv": "16.5.0",
+    "express": "4.21.1",
+    "express-session": "1.18.0",
+    "morgan": "1.10.0",
+    "pg": "8.13.0",
+    "prisma": "6.7.0"
   },
   "devDependencies": {
-    "@types/connect-pg-simple": "^7.0.0",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/cookie-parser": "^1.4.7",
-    "@types/express-session": "^1.18.0",
-    "@types/morgan": "^1.9.9",
-    "@types/pg": "^8.11.6",
-    "@types/node": "^20.14.2",
-    "typescript": "^5.0.0"
+    "@types/connect-pg-simple": "7.0.0",
+    "@types/cors": "2.8.17",
+    "@types/express": "4.17.21",
+    "@types/cookie-parser": "1.4.7",
+    "@types/express-session": "1.17.7",
+    "@types/morgan": "1.9.9",
+    "@types/node": "20.14.2",
+    "@types/pg": "8.11.6",
+    "typescript": "5.0.0"
   },
   "scripts": {
     "postinstall": "npx prisma generate"
