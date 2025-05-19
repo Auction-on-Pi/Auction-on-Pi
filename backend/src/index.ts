@@ -9,63 +9,42 @@ import env from './environments';
 import { PrismaClient } from '@prisma/client';
 import paymentsRouter from './handlers/payments';
 import userRouter from './handlers/users';
-import './types/session';
+import './types';
 
-// Extend Express Request type to include prisma
 declare global {
   namespace Express {
     interface Request {
       prisma: PrismaClient;
+      session: session.Session & { user?: { id: string; roles?: string[] } };
     }
   }
 }
 
-// Fallback for Prisma
-let prisma: PrismaClient;
-try {
-  prisma = require('./lib/prisma').default;
-} catch (e) {
-  console.warn('Falling back to new PrismaClient instance');
-  prisma = new PrismaClient();
-}
-
 const app: Application = express();
+const PGStore = pgSimple(session);
+const pgPool = new Pool({ connectionString: env.database_url });
 
 // Middleware
 app.use(logger('dev'));
 app.use(express.json());
-app.use(cors({
-  origin: env.frontend_url,
-  credentials: true
-}));
+app.use(cors({ origin: env.frontend_url, credentials: true }));
 app.use(cookieParser());
-
-// Session configuration
-const PGStore = pgSimple(session);
-const pgPool = new Pool({
-  connectionString: env.database_url,
-});
-
 app.use(session({
   secret: env.session_secret,
   resave: false,
   saveUninitialized: false,
-  store: new PGStore({
-    pool: pgPool,
-    tableName: 'user_sessions',
-    createTableIfMissing: true
-  }),
+  store: new PGStore({ pool: pgPool, tableName: 'user_sessions' }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
+    maxAge: 86400000
   }
 }));
 
-// Attach prisma to request
+// Prisma Middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  req.prisma = prisma;
+  req.prisma = new PrismaClient();
   next();
 });
 
@@ -73,14 +52,14 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use('/payments', paymentsRouter);
 app.use('/user', userRouter);
 
-// Health check
+// Health Check
 app.get('/', (_req: Request, res: Response) => {
-  res.status(200).json({ message: "Hello, World!" });
+  res.status(200).json({ message: "OK" });
 });
 
-// Error handler
-app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
+// Error Handler
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  console.error(err.stack);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
