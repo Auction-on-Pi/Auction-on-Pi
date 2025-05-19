@@ -1,14 +1,14 @@
 import cors from 'cors';
-import express, { Request, Response, NextFunction, Application, ErrorRequestHandler } from 'express';
+import express, { Request, Response, NextFunction, Application } from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import logger from 'morgan';
-import pgSimple from 'connect-pg-simple';
+import * as pgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 import env from './environments';
 import { PrismaClient } from '@prisma/client';
-import { paymentsRouter } from './handlers/payments';
-import { userRouter } from './handlers/users';
+import paymentsRouter from './handlers/payments';
+import userRouter from './handlers/users';
 import './types/session';
 
 // Extend Express Request type to include prisma
@@ -31,7 +31,7 @@ try {
 
 const app: Application = express();
 
-// Middleware setup
+// Middleware
 app.use(logger('dev'));
 app.use(express.json());
 app.use(cors({
@@ -63,7 +63,7 @@ app.use(session({
   }
 }));
 
-// Attach Prisma to request
+// Attach prisma to request
 app.use((req: Request, _res: Response, next: NextFunction) => {
   req.prisma = prisma;
   next();
@@ -73,20 +73,15 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use('/payments', paymentsRouter);
 app.use('/user', userRouter);
 
-// Health check endpoint
-app.get('/', async (_req: Request, res: Response) => {
+// Health check
+app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({ message: "Hello, World!" });
 });
 
-// Error handling middleware
-const errorHandler: ErrorRequestHandler = (err: unknown, req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof Error) {
-    console.error('Server Error:', err);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-  return res.status(500).json({ error: 'Unknown server error' });
-};
-
-app.use(errorHandler);
+// Error handler
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
 
 export default app;
