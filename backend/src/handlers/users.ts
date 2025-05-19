@@ -1,54 +1,60 @@
-import { Router, Request, Response } from 'express';
-import axios from 'axios';
-import env from '../environments';
-import '../types/session';
+import { Request, Response, Router } from 'express';
+import { AuthUserData } from '../types/users';
 
 const router = Router();
 
-router.post('/signin', async (req: Request, res: Response) => {
+// Get current user
+router.get('/me', async (req: Request, res: Response) => {
   try {
-    const { piUserId, username } = req.body;
-    if (!piUserId || !username) {
-      return res.status(400).json({ error: 'Missing piUserId or username' });
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const prisma = req.prisma;
-    let user = await prisma.user.findUnique({
-      where: { piUserId },
+    const user = await req.prisma.user.findUnique({
+      where: { id: req.session.user.id },
+      select: {
+        id: true,
+        piUserId: true,
+        username: true,
+        roles: true
+      }
     });
 
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          piUserId,
-          username
-        },
-      });
-
-      const supabaseAdmin = axios.create({
-        baseURL: env.supabase_url,
-        headers: {
-          'Authorization': `Bearer ${env.supabase_service_role_key}`,
-          'Content-Type': 'application/json',
-          'apikey': env.supabase_service_role_key
-        }
-      });
-
-      await supabaseAdmin.post('/auth/v1/users', {
-        id: piUserId,
-        email: `${username.replace(/\s+/g, '').toLowerCase()}@auction-on-pi.com`,
-        role: 'authenticated'
-      });
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    req.session.user = user;
-    res.status(200).json(user);
-  } catch (error: any) {
-    console.error('Signin error:', {
-      message: error.message,
-      stack: error.stack
+    res.json(user);
+  } catch (error) {
+    console.error('User error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update user roles (admin-only example)
+router.patch('/roles', async (req: Request, res: Response) => {
+  try {
+    // Check if current user is admin
+    if (!req.session.user?.roles?.includes('admin')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { userId, roles } = req.body;
+    
+    const updatedUser = await req.prisma.user.update({
+      where: { id: userId },
+      data: { roles },
+      select: {
+        id: true,
+        username: true,
+        roles: true
+      }
     });
-    res.status(500).json({ error: 'Signin failed', details: error.message });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Role update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
