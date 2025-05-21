@@ -10,6 +10,8 @@
     "morgan": "1.10.0",
     "pg": "8.13.0",
     "prisma": "6.7.0"
+    "@supabase/supabase-js": "^2.43.4",
+    "axios": "^1.7.2",
   },
   "devDependencies": {
     "@types/connect-pg-simple": "7.0.0",
