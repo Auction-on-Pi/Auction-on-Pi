@@ -1,38 +1,40 @@
-import { Router, Request, Response } from 'express';
+import { supabase } from '../../utils/supabase/server';
 
-const router: Router = Router();
-
-router.get('/me', async (req: Request, res: Response) => {
+export const getUserProfile = async (userId: string) => {
   try {
-    if (!req.session.user) return res.status(401).json({ error: 'Unauthorized' });
-    
-    const user = await req.prisma.user.findUnique({
-      where: { id: req.session.user.id },
-      select: { id: true, username: true, roles: true }
-    });
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, pi_balance, locked_bids')
+      .eq('id', userId)
+      .single();
 
-    user ? res.json(user) : res.status(404).json({ error: 'Not found' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-router.patch('/roles', async (req: Request, res: Response) => {
-  try {
-    if (!req.session.user?.roles?.includes('admin')) {
-      return res.status(403).json({ error: 'Forbidden' });
+    if (error) {
+      throw new Error(error.message);
     }
 
-    const updatedUser = await req.prisma.user.update({
-      where: { id: req.body.userId },
-      data: { roles: req.body.roles },
-      select: { id: true, roles: true }
-    });
-
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ error: 'Update failed' });
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching user profile:', error);
+    throw error;
   }
-});
+};
 
-export default router;
+export const updateUserProfile = async (userId: string, updates: { username?: string; pi_balance?: number }) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
