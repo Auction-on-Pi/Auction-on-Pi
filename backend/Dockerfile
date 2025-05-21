@@ -1,23 +1,27 @@
-FROM node:16
+# Use Node.js LTS version
+FROM node:18-alpine
 
-# Create app directory
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Install app dependencies
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Copy package files
+COPY package.json package-lock.json ./
 
-# Copy app source
-COPY ./src ./src
-COPY ./tsconfig.json ./tsconfig.json
+# Install dependencies
+RUN npm install
 
-# Build the app
-RUN yarn build
+# Copy Prisma schema and generate client
+COPY prisma ./prisma
+RUN npx prisma generate
 
-# Install PM2 for managing processes
-RUN yarn global add pm2
-COPY ./docker/processes.config.js ./processes.config.js
+# Copy remaining source code
+COPY . .
 
-# Expose port and define runtime command
-EXPOSE 8080
-CMD [ "pm2-runtime", "./processes.config.js" ]
+# Build TypeScript
+RUN npm run build
+
+# Expose port (adjust if using a different port)
+EXPOSE 3000
+
+# Start the app
+CMD ["npm", "start"]
