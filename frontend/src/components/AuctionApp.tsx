@@ -1,40 +1,68 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList } from 'react-native';
 import { supabase } from '../utils/supabase';
 
-export default function App() {
-  const [todos, setTodos] = useState([]);
+interface Auction {
+  id: string;
+  title: string;
+  description: string;
+  current_bid: number;
+  ends_at: string;
+  status: string;
+}
+
+export default function AuctionApp() {
+  const [auctions, setAuctions] = useState<Auction[]>([]);
 
   useEffect(() => {
-    const getTodos = async () => {
+    const getAuctions = async () => {
       try {
-        const { data: todos, error } = await supabase.from('todos').select();
+        const { data: auctions, error } = await supabase
+          .from('auctions')
+          .select('id, title, description, current_bid, ends_at, status')
+          .eq('status', 'active');
 
         if (error) {
-          console.error('Error fetching todos:', error.message);
+          console.error('Error fetching auctions:', error.message);
           return;
         }
 
-        if (todos && todos.length > 0) {
-          setTodos(todos);
+        if (auctions && auctions.length > 0) {
+          setAuctions(auctions);
         }
-      } catch (error) {
-        console.error('Error fetching todos:', error.message);
+      } catch (error: any) {
+        console.error('Error fetching auctions:', error.message);
       }
     };
 
-    getTodos();
+    getAuctions();
   }, []);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Todo List</Text>
-      <FlatList
-        data={todos}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <Text key={item.id}>{item.title}</Text>}
-      />
-    </View>
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h1>Auction List</h1>
+      {auctions.length === 0 ? (
+        <p>No active auctions available.</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {auctions.map((auction) => (
+            <li
+              key={auction.id}
+              style={{
+                border: '1px solid #ccc',
+                padding: '10px',
+                margin: '10px 0',
+                borderRadius: '5px',
+              }}
+            >
+              <h2>{auction.title}</h2>
+              <p>{auction.description}</p>
+              <p>Current Bid: {auction.current_bid} Pi</p>
+              <p>Ends: {new Date(auction.ends_at).toLocaleString()}</p>
+              <p>Status: {auction.status}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
-};
+}
