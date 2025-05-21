@@ -28,5 +28,10 @@
   },
   "scripts": {
     "postinstall": "npx prisma generate"
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
   }
 }
